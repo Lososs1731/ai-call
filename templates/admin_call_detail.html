@@ -1,0 +1,68 @@
+<!-- templates/admin_call_detail.html -->
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Detail hovoru</title>
+    <style>
+        /* Stejný CSS jako admin_campaign.html */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, sans-serif; background: #f5f5f5; }
+        .navbar { background: white; padding: 1rem 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; }
+        .section { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        
+        .message { padding: 1rem; margin-bottom: 1rem; border-radius: 8px; }
+        .message-assistant { background: #e3f2fd; }
+        .message-user { background: #f1f8e9; }
+        .message strong { display: block; margin-bottom: 0.5rem; color: #333; }
+        
+        .score-high { color: #28a745; font-size: 2rem; font-weight: bold; }
+        .score-medium { color: #ffc107; font-size: 2rem; font-weight: bold; }
+        .score-low { color: #dc3545; font-size: 2rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="/admin">← Zpět na dashboard</a>
+    </div>
+    
+    <div class="container">
+        <div class="section">
+            <h1>📞 Detail hovoru</h1>
+            <p><strong>Telefon:</strong> {{ call.phone }}</p>
+            <p><strong>Délka:</strong> {{ call.duration }}s</p>
+            <p><strong>Status:</strong> {{ call.status }}</p>
+            <p><strong>Datum:</strong> {{ call.created_at }}</p>
+        </div>
+        
+        <div class="section">
+            <h2>📊 AI Hodnocení</h2>
+            <p><strong>Výsledek:</strong> {{ call.outcome or 'N/A' }}</p>
+            <p><strong>Skóre:</strong> 
+                <span class="{% if call.sales_score >= 70 %}score-high{% elif call.sales_score >= 40 %}score-medium{% else %}score-low{% endif %}">
+                    {{ call.sales_score or 0 }}/100
+                </span>
+            </p>
+            <p><strong>AI Shrnutí:</strong></p>
+            <p>{{ call.ai_summary or 'Není dostupné' }}</p>
+        </div>
+        
+        <div class="section">
+            <h2>💬 Transkript konverzace</h2>
+            {% if conversation %}
+                {% for msg in conversation %}
+                    {% if msg.role != 'system' %}
+                    <div class="message message-{{ msg.role }}">
+                        <strong>{% if msg.role == 'assistant' %}🤖 AI (Pavel):{% else %}👤 {{ call.phone }}:{% endif %}</strong>
+                        {{ msg.content }}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <p>Transkript není dostupný.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

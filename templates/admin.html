@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .navbar {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .navbar .logo {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .navbar .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .navbar .logout-btn {
+            background: #e74c3c;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-error { background: #f8d7da; color: #721c24; }
+        .alert-info { background: #d1ecf1; color: #0c5460; }
+        
+        .new-campaign {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+        }
+        
+        .campaigns-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .campaign-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .campaign-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        .campaign-card h3 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">📊 Admin Panel</div>
+        <div class="user-info">
+            <span>👤 {{ user.username }}</span>
+            <a href="/logout" class="logout-btn">Odhlásit se</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="header">
+            <h1>📞 Cold Calling Dashboard</h1>
+            <p>Správa kampaní - přihlášen jako {{ user.username }}</p>
+        </div>
+        
+        <div class="new-campaign">
+            <h2>➕ Nová kampaň</h2>
+            <form action="/admin/create-campaign" method="POST">
+                <div class="form-group">
+                    <label>Název kampaně:</label>
+                    <input type="text" name="name" placeholder="Např. Weby Q4 2025" required>
+                </div>
+                <div class="form-group">
+                    <label>Popis:</label>
+                    <textarea name="description" rows="3" placeholder="Cíl kampaně, poznámky..."></textarea>
+                </div>
+                <button type="submit" class="btn">Vytvořit kampaň</button>
+            </form>
+        </div>
+        
+        <h2>🎯 Moje kampaně</h2>
+        {% if campaigns %}
+        <div class="campaigns-grid">
+            {% for campaign in campaigns %}
+            <div class="campaign-card" onclick="window.location.href='/admin/campaign/{{ campaign.id }}'">
+                <h3>{{ campaign.name }}</h3>
+                <p>{{ campaign.description or 'Bez popisu' }}</p>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value">{{ campaign.total_contacts or 0 }}</div>
+                        <div class="stat-label">Kontaktů</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">{{ campaign.success_rate or 0 }}%</div>
+                        <div class="stat-label">Úspěšnost</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p>Zatím žádné kampaně. Vytvoř první!</p>
+        {% endif %}
+    </div>
+</body>
+</html>

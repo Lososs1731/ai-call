@@ -1,128 +1,126 @@
+# services/cold_caller_service.py - NOVÝ SOUBOR
 """
-Sluzba pro cold calling
+Služba pro cold calling - propojená s cold_calling_db
 """
 
 from twilio.rest import Client
 from datetime import datetime
 import time
-import os
 
-from core import AIEngine, TTSEngine
-from config import Config, CallConfig, Prompts
-from database import CallDB
+from core import AIEngine
+from config import Config
+from database.cold_calling_db import ColdCallingDB
 
 
 class ColdCallerService:
-    """Sluzba pro odchozi cold calling"""
+    """Služba pro odchozí cold calling"""
     
-    def __init__(self, campaign_name, product_name=None):
-        self.twilio = Client(Config.TWILIO_ACCOUNT_SID, Config.TWILIO_AUTH_TOKEN)
-        self.ai = AIEngine()
-        self.db = CallDB()
-        self.campaign = campaign_name
+    def __init__(self, campaign_name):
+        print(f"Inicializuji ColdCallerService...")
         
-        # Ziskej produkt z databaze
-        if product_name:
-            self.product = self.db.get_product_by_name(product_name)
-        else:
-            # Default produkt
-            self.product = self.db.get_product_by_name("Tvorba webů na míru")
+        try:
+            self.twilio = Client(Config.TWILIO_ACCOUNT_SID, Config.TWILIO_AUTH_TOKEN)
+            print("  ✓ Twilio OK")
+        except Exception as e:
+            print(f"  ✗ Twilio chyba: {e}")
+            raise
         
-        if not self.product:
-            raise ValueError(f"Produkt '{product_name}' nenalezen v databazi!")
+        try:
+            self.ai = AIEngine()
+            print("  ✓ AIEngine OK")
+        except Exception as e:
+            print(f"  ✗ AIEngine chyba: {e}")
+            raise
+        
+        try:
+            self.db = ColdCallingDB()
+            print("  ✓ ColdCallingDB OK")
+        except Exception as e:
+            print(f"  ✗ ColdCallingDB chyba: {e}")
+            raise
+        
+        # Najdi kampaň
+        campaigns = self.db.get_campaigns()
+        self.campaign = next((c for c in campaigns if c['name'] == campaign_name), None)
+        
+        if not self.campaign:
+            raise ValueError(f"Kampaň '{campaign_name}' nenalezena!")
         
         print(f"\n{'='*50}")
-        print(f"Cold Caller pripraven")
-        print(f"Kampan: {campaign_name}")
-        print(f"Produkt: {self.product['name']}")
-        print(f"Popis: {self.product['description']}")
+        print(f"✅ Cold Caller připraven")
+        print(f"Kampaň: {self.campaign['name']} (ID: {self.campaign['id']})")
         print(f"{'='*50}\n")
     
     def call_contact(self, contact, webhook_base_url):
-        """Zavola kontakt"""
+        """Zavolá kontakt"""
         try:
             print(f"\n{'='*60}")
-            print(f"📞 PRIPRAVUJI HOVOR")
-            print(f"{'='*60}")
-            print(f"Jmeno: {contact['name']}")
-            print(f"Telefon: {contact['phone']}")
+            print(f"📞 VOLÁM: {contact['name']} - {contact['phone']}")
             if contact.get('company'):
-                print(f"Firma: {contact['company']}")
+                print(f"   Firma: {contact['company']}")
+            print(f"{'='*60}")
             
-            # PŘIPRAVIT WEBHOOK URL s parametry
+            # Webhook URL
             base_url = webhook_base_url.rstrip('/')
             
             import urllib.parse
             params = urllib.parse.urlencode({
                 'name': contact['name'],
                 'company': contact.get('company', ''),
-                'product_id': self.product['id']
+                'campaign': self.campaign['id']
             })
             
             webhook = f"{base_url}/outbound?{params}"
             status_callback = f"{base_url}/call-status"
             
-            print(f"\n📡 Webhook:")
-            print(f"   {webhook}")
+            print(f"📡 Webhook: {webhook}")
             
-            # ZAVOLAT!
-            print(f"\n📞 VOLÁM...")
-            
+            # ZAVOLAT
             call = self.twilio.calls.create(
                 to=contact['phone'],
                 from_=Config.TWILIO_PHONE_NUMBER,
                 url=webhook,
                 status_callback=status_callback,
                 status_callback_event=['completed'],
-                record=CallConfig.RECORD_CALLS,
                 timeout=30
             )
             
-            print(f"   ✅ Hovor zahájen!")
-            print(f"   📋 Call SID: {call.sid}")
-            print(f"   📊 Status: {call.status}")
+            print(f"✅ Hovor zahájen!")
+            print(f"   Call SID: {call.sid}")
             
-            # ULOŽIT DO DB
-            self.db.add_call({
-                'sid': call.sid,
-                'type': 'outbound',
-                'direction': 'outbound',
-                'phone': contact['phone']
-            })
-            
-            # Update kontaktu
-            self.db.update_contact(contact['phone'], {
-                'last_call': datetime.now().isoformat(),
-                'call_count': contact.get('call_count', 0) + 1,
-                'status': 'contacted'
-            })
-            
-            print(f"   ✅ Uloženo do DB")
-            print(f"{'='*60}\n")
+            # Updatuj status
+            self.db.update_contact_status(contact['id'], 'calling')
             
             return {'success': True, 'sid': call.sid}
             
         except Exception as e:
-            print(f"\n❌ CHYBA při volání: {e}")
+            print(f"❌ CHYBA: {e}")
             import traceback
             traceback.print_exc()
+            
+            self.db.update_contact_status(contact['id'], 'error')
             return {'success': False, 'error': str(e)}
     
     def run_campaign(self, webhook_base_url, max_calls=None):
-        """Spusti kampan"""
+        """Spustí kampaň"""
         print(f"\n{'='*60}")
-        print(f"🚀 SPOUŠTÍM KAMPAŇ: {self.campaign}")
-        print(f"{'='*60}")
+        print(f"🚀 SPOUŠTÍM KAMPAŇ: {self.campaign['name']}")
+        print(f"{'='*60}\n")
         
-        contacts = self.db.get_contacts(status='new', limit=max_calls or 1000)
+        # Získej pending kontakty
+        contacts = self.db.get_contacts(
+            campaign_id=self.campaign['id'],
+            status='pending'
+        )
         
         if not contacts:
-            print("❌ Žádné kontakty k zavolání")
+            print("❌ Žádné kontakty k zavolání!")
             return
         
-        print(f"📊 Kontaktů k zavolání: {len(contacts)}")
-        print(f"🎯 Produkt: {self.product['name']}")
-        print(f"{'='*60}")
+        if max_calls:
+            contacts = contacts[:max_calls]
+        
+        print(f"📊 Obvolám {len(contacts)} kontaktů\n")
         
         made = 0
         failed = 0
@@ -130,48 +128,25 @@ class ColdCallerService:
         for i, contact in enumerate(contacts, 1):
             print(f"\n[{i}/{len(contacts)}]")
             
-            # Kontrola volací doby
-            if not self._can_call():
-                print("⏰ Mimo volací dobu - ukončuji kampaň")
-                break
-            
             # Zavolat
             result = self.call_contact(contact, webhook_base_url)
             
             if result['success']:
                 made += 1
-                print(f"✅ Úspěch #{made}")
             else:
                 failed += 1
-                print(f"❌ Selhání: {result.get('error', 'Unknown')}")
             
             # Pauza mezi hovory
             if i < len(contacts):
-                wait = 60 / CallConfig.CALLS_PER_MINUTE
-                print(f"\n⏳ Čekám {wait:.0f}s před dalším hovorem...")
+                wait = 30
+                print(f"\n⏳ Čekám {wait}s...")
                 time.sleep(wait)
         
         # VÝSLEDKY
         print(f"\n{'='*60}")
         print(f"📊 KAMPAŇ DOKONČENA")
         print(f"{'='*60}")
-        print(f"✅ Úspěšných hovorů: {made}")
+        print(f"✅ Úspěšných: {made}")
         print(f"❌ Selhání: {failed}")
-        print(f"📞 Celkem pokusů: {made + failed}")
+        print(f"\n💡 Výsledky: http://localhost:5000/admin/campaign/{self.campaign['id']}")
         print(f"{'='*60}\n")
-    
-    def _can_call(self):
-        """Kontrola volaci doby"""
-        now = datetime.now()
-        
-        # Kontrola dne v týdnu
-        if now.weekday() not in CallConfig.WORK_DAYS:
-            print(f"⏰ Dnes ({now.strftime('%A')}) není pracovní den")
-            return False
-        
-        # Kontrola hodiny
-        if not (CallConfig.START_HOUR <= now.hour < CallConfig.END_HOUR):
-            print(f"⏰ Mimo pracovní dobu ({CallConfig.START_HOUR}-{CallConfig.END_HOUR}h)")
-            return False
-        
-        return True

@@ -1,0 +1,184 @@
+<!-- templates/campaign_detail.html -->
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail kampaně</title>
+    <style>
+        /* Použij stejný CSS jako v dashboard.html */
+        /* ... zkopíruj style sekci ... */
+        
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card h3 {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-card p {
+            color: #666;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .status-pending { background: #ffeaa7; color: #d63031; }
+        .status-contacted { background: #74b9ff; color: #0984e3; }
+        .status-success { background: #55efc4; color: #00b894; }
+        .status-failed { background: #fab1a0; color: #d63031; }
+        
+        .score {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .score-high { color: #00b894; }
+        .score-medium { color: #fdcb6e; }
+        .score-low { color: #d63031; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Detail kampaně</h1>
+        <p>Přehled kontaktů a hovorů</p>
+    </div>
+    
+    <div class="container">
+        <a href="/" class="back-btn">← Zpět na přehled</a>
+        
+        <!-- Statistiky -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>{{ stats.total_contacts }}</h3>
+                <p>Celkem kontaktů</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ stats.called }}</h3>
+                <p>Zavoláno</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ stats.success }}</h3>
+                <p>Úspěšných</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ stats.success_rate }}%</h3>
+                <p>Úspěšnost</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ stats.avg_score }}/100</h3>
+                <p>Průměrné skóre</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ stats.avg_duration }}s</h3>
+                <p>Průměrná délka</p>
+            </div>
+        </div>
+        
+        <!-- Export -->
+        <div style="margin: 2rem 0;">
+            <a href="/export/{{ campaign_id }}" class="btn">📥 Export do CSV</a>
+        </div>
+        
+        <!-- Tabulka kontaktů -->
+        <div class="table-container">
+            <h2>📋 Kontakty a hovory</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Jméno</th>
+                        <th>Firma</th>
+                        <th>Telefon</th>
+                        <th>Status</th>
+                        <th>Výsledek</th>
+                        <th>Skóre</th>
+                        <th>Délka</th>
+                        <th>AI Shrnutí</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contact in contacts %}
+                    {% set call = calls | selectattr('contact_id', 'equalto', contact.id) | first %}
+                    <tr onclick="window.location.href='/contact/{{ contact.id }}'" style="cursor: pointer;">
+                        <td><strong>{{ contact.name }}</strong></td>
+                        <td>{{ contact.company or '-' }}</td>
+                        <td>{{ contact.phone }}</td>
+                        <td>
+                            <span class="status status-{{ contact.status }}">
+                                {{ contact.status }}
+                            </span>
+                        </td>
+                        <td>{{ call.outcome if call else '-' }}</td>
+                        <td>
+                            {% if call %}
+                            <span class="score {% if call.sales_score >= 70 %}score-high{% elif call.sales_score >= 40 %}score-medium{% else %}score-low{% endif %}">
+                                {{ call.sales_score }}
+                            </span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>{{ call.duration if call else '-' }}s</td>
+                        <td>{{ (call.ai_summary[:50] + '...') if call and call.ai_summary else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

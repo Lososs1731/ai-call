@@ -1,0 +1,191 @@
+<!-- templates/dashboard.html -->
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cold Calling Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .campaigns-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .campaign-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        
+        .campaign-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        
+        .campaign-card h3 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .campaign-card p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #999;
+            margin-top: 0.25rem;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+        }
+        
+        .new-campaign {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .new-campaign h2 {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📞 Cold Calling Dashboard</h1>
+        <p>Správa kampaní a kontaktů</p>
+    </div>
+    
+    <div class="container">
+        <!-- Nová kampaň -->
+        <div class="new-campaign">
+            <h2>➕ Nová kampaň</h2>
+            <form action="/create-campaign" method="POST">
+                <div class="form-group">
+                    <label>Název kampaně:</label>
+                    <input type="text" name="name" placeholder="Např. Weby pro malé firmy Q4 2025" required>
+                </div>
+                <div class="form-group">
+                    <label>Popis:</label>
+                    <textarea name="description" rows="3" placeholder="Cíl kampaně, poznámky..."></textarea>
+                </div>
+                <button type="submit" class="btn">Vytvořit kampaň</button>
+            </form>
+        </div>
+        
+        <!-- Seznam kampaní -->
+        <h2>🎯 Kampaně</h2>
+        <div class="campaigns-grid">
+            {% for campaign in campaigns %}
+            <div class="campaign-card" onclick="window.location.href='/campaign/{{ campaign.id }}'">
+                <h3>{{ campaign.name }}</h3>
+                <p>{{ campaign.description or 'Bez popisu' }}</p>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value">{{ campaign.total_contacts or 0 }}</div>
+                        <div class="stat-label">Kontaktů</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">{{ campaign.success_rate or 0 }}%</div>
+                        <div class="stat-label">Úspěšnost</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

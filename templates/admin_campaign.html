@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kampaň {{ campaign_id }} - Admin</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .navbar {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar .logo {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .navbar a {
+            color: #667eea;
+            text-decoration: none;
+            margin-right: 1rem;
+        }
+        
+        .navbar .logout-btn {
+            background: #e74c3c;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .section h2 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+            cursor: pointer;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .badge-pending { background: #fff3cd; color: #856404; }
+        .badge-calling { background: #cce5ff; color: #004085; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-failed { background: #f8d7da; color: #721c24; }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div>
+            <a href="/admin">← Zpět na dashboard</a>
+            <span class="logo">📊 Kampaň #{{ campaign_id }}</span>
+        </div>
+        <div>
+            <span>👤 {{ user.username }}</span>
+            <a href="/logout" class="logout-btn">Odhlásit</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>{{ stats.get('campaign_name', 'Kampaň') }}</h1>
+            <p>ID: {{ campaign_id }}</p>
+        </div>
+        
+        <!-- Statistiky -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>{{ stats.total_contacts or 0 }}</h3>
+                <p>Celkem kontaktů</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ stats.pending or 0 }}</h3>
+                <p>Čeká na obvolání</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ stats.called or 0 }}</h3>
+                <p>Zavoláno</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ stats.success or 0 }}</h3>
+                <p>Úspěšných</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ stats.success_rate or 0 }}%</h3>
+                <p>Úspěšnost</p>
+            </div>
+        </div>
+        
+        <!-- Akce -->
+        <div style="margin-bottom: 2rem;">
+            <a href="/admin/import/{{ campaign_id }}" class="btn">📥 Importovat CSV</a>
+            <a href="/admin/export/{{ campaign_id }}" class="btn">📤 Export CSV</a>
+        </div>
+        
+        <!-- Přidat kontakt ručně -->
+        <div class="section">
+            <h2>➕ Přidat kontakt</h2>
+            <form action="/admin/add-contact" method="POST" style="display: grid; gap: 1rem;">
+                <input type="hidden" name="campaign_id" value="{{ campaign_id }}">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <input type="text" name="name" placeholder="Jméno *" required>
+                    <input type="tel" name="phone" placeholder="+420..." required>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <input type="text" name="company" placeholder="Firma">
+                    <input type="email" name="email" placeholder="Email">
+                </div>
+                
+                <button type="submit" class="btn btn-success">➕ Přidat</button>
+            </form>
+        </div>
+        
+        <!-- Seznam kontaktů -->
+        <div class="section">
+            <h2>📋 Kontakty ({{ contacts|length }})</h2>
+            
+            {% if contacts %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Jméno</th>
+                        <th>Firma</th>
+                        <th>Telefon</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contact in contacts %}
+                    <tr>
+                        <td>{{ contact.name }}</td>
+                        <td>{{ contact.company or '-' }}</td>
+                        <td>{{ contact.phone }}</td>
+                        <td>{{ contact.email or '-' }}</td>
+                        <td>
+                            <span class="badge badge-{{ contact.status }}">
+                                {{ contact.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>Zatím žádné kontakty.</p>
+            <p>💡 Importuj CSV nebo přidej ručně výše.</p>
+            {% endif %}
+        </div>
+        
+        <!-- Návod -->
+        <div class="section">
+            <h2>🚀 Jak spustit kampaň</h2>
+            <ol>
+                <li>Importuj kontakty (CSV nebo ručně)</li>
+                <li>Spusť: <code>python -m cli.run_campaign</code></li>
+                <li>Vyber tuto kampaň (ID: {{ campaign_id }})</li>
+                <li>Sleduj výsledky zde</li>
+            </ol>
+        </div>
+        <!-- Přidej za sekci "Kontakty" -->
+
+<!-- Seznam hovorů -->
+<div class="section">
+    <h2>📞 Hovory ({{ calls|length }})</h2>
+    
+    {% if calls %}
+    <table>
+        <thead>
+            <tr>
+                <th>Telefon</th>
+                <th>Délka</th>
+                <th>Výsledek</th>
+                <th>Skóre</th>
+                <th>AI Shrnutí</th>
+                <th>Datum</th>
+                <th>Detail</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for call in calls %}
+            <tr>
+                <td>{{ call.phone }}</td>
+                <td>{{ call.duration }}s</td>
+                <td>
+                    {% if call.outcome == 'meeting_scheduled' %}
+                    <span class="badge badge-success">✅ Schůzka</span>
+                    {% elif call.outcome == 'rejected' or call.outcome == 'no_interest' %}
+                    <span class="badge badge-failed">❌ Odmítnuto</span>
+                    {% else %}
+                    <span class="badge badge-pending">{{ call.outcome or 'N/A' }}</span>
+                    {% endif %}
+                </td>
+                <td><strong>{{ call.sales_score or 0 }}/100</strong></td>
+                <td>{{ (call.ai_summary or 'N/A')[:60] }}...</td>
+                <td>{{ call.created_at }}</td>
+                <td>
+                    <a href="/admin/call-detail/{{ call.id }}" class="btn">📄 Detail</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Zatím žádné hovory.</p>
+    {% endif %}
+</div>
+    </div>
+</body>
+</html>

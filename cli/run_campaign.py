@@ -1,3 +1,4 @@
+# cli/run_campaign.py - OPRAVENÁ VERZE (původní struktura)
 """
 Spusteni cold calling kampane z prikazove radky
 
@@ -5,8 +6,8 @@ Pouziti:
     python -m cli.run_campaign
 """
 
-from services import ColdCallerService
-from database import CallDB
+from services.cold_caller import ColdCallerService
+from database.cold_calling_db import ColdCallingDB  # ← ZMĚNA!
 import sys
 
 
@@ -15,37 +16,39 @@ def main():
     print("   COLD CALLING - SPUSTENI KAMPANE")
     print("=" * 60)
     
-    # Inicializace DB
-    db = CallDB()
+    # ✅ Inicializace COLD_CALLING_DB
+    db = ColdCallingDB()
     
-    # 1. Vyber produktu
-    print("\nDostupne produkty:")
-    products = db.get_all_products()
+    # ✅ 1. Vyber kampaně
+    print("\nDostupne kampane:")
+    campaigns = db.get_campaigns()
     
-    if not products:
-        print("CHYBA: Zadne produkty v databazi!")
-        print("Vytvaram defaultni produkt...")
-        db._init_default_product()
-        products = db.get_all_products()
+    if not campaigns:
+        print("CHYBA: Zadne kampane v databazi!")
+        print("\n💡 Vytvor kampan v admin panelu:")
+        print("   http://localhost:5000/admin")
+        sys.exit(1)
     
-    for i, product in enumerate(products, 1):
-        print(f"  {i}. {product['name']}")
-        print(f"     {product['description']}")
+    for i, campaign in enumerate(campaigns, 1):
+        stats = db.get_campaign_stats(campaign['id'])
+        print(f"\n  {i}. {campaign['name']}")
+        print(f"     {campaign['description']}")
+        print(f"     Kontaktu: {stats['total_contacts']} ({stats['pending']} ceka)")
     
-    product_choice = input(f"\nVyber produkt (1-{len(products)}): ").strip()
+    campaign_choice = input(f"\nVyber kampan (1-{len(campaigns)}): ").strip()
     
     try:
-        product_idx = int(product_choice) - 1
-        selected_product = products[product_idx]['name']
+        campaign_idx = int(campaign_choice) - 1
+        selected_campaign = campaigns[campaign_idx]
     except (ValueError, IndexError):
         print("CHYBA: Neplatna volba")
         sys.exit(1)
     
-    print(f"\n✓ Vybran produkt: {selected_product}")
+    print(f"\n✓ Vybrana kampan: {selected_campaign['name']}")
     
-    # 2. Ziskani ngrok URL
+    # ✅ 2. Ziskani ngrok URL
     print("\n" + "=" * 60)
-    print("NASTAVENI WEBHOOku")
+    print("NASTAVENI WEBHOOKU")
     print("=" * 60)
     print("1. Ujisti se, ze mas spusteny server (python run.py)")
     print("2. Zkopiruj ngrok URL z terminu serveru")
@@ -56,18 +59,19 @@ def main():
         print("CHYBA: URL musi zacinat https://")
         sys.exit(1)
     
-    # 3. Kontrola kontaktu
-    contacts = db.get_contacts(status='new', limit=100)
+    # ✅ 3. Kontrola kontaktu
+    contacts = db.get_contacts(
+        campaign_id=selected_campaign['id'],
+        status='pending'
+    )
     
     if not contacts:
         print("\n" + "=" * 60)
-        print("CHYBA: Zadne kontakty v databazi!")
+        print("CHYBA: Zadne kontakty v kampani!")
         print("=" * 60)
-        print("\nSpust nejprve:")
-        print("  python -m utils.import_contacts data/contacts.csv")
-        print("\nNebo vytvor soubor data/contacts.csv s obsahem:")
-        print("  name,phone,company,email")
-        print("  Jan Novak,+420777111222,Firma s.r.o.,jan@email.cz")
+        print("\nImportuj kontakty:")
+        print("  python -m cli.import_contacts")
+        print(f"  → Vyber kampan ID: {selected_campaign['id']}")
         sys.exit(1)
     
     print("\n" + "=" * 60)
@@ -81,7 +85,7 @@ def main():
     if len(contacts) > 5:
         print(f"  ... a dalsich {len(contacts) - 5}")
     
-    # 4. Kolik hovoru
+    # ✅ 4. Kolik hovoru
     max_calls = input(f"\nKolik hovoru chces uskutecnit? (max {len(contacts)}): ").strip()
     
     try:
@@ -92,11 +96,11 @@ def main():
         print("CHYBA: Zadej cislo mezi 1 a", len(contacts))
         sys.exit(1)
     
-    # 5. Potvrzeni
+    # ✅ 5. Potvrzeni
     print("\n" + "=" * 60)
     print("POTVRZENI")
     print("=" * 60)
-    print(f"Produkt: {selected_product}")
+    print(f"Kampan: {selected_campaign['name']}")
     print(f"Pocet hovoru: {max_calls}")
     print(f"Kontakty: {', '.join([c['name'] for c in contacts[:max_calls]])}")
     
@@ -106,18 +110,15 @@ def main():
         print("Zruseno")
         sys.exit(0)
     
-    # 6. Nazev kampane
-    campaign_name = input("\nNazev kampane: ").strip() or f"Kampan {selected_product}"
-    
-    # 7. Vytvoreni a spusteni kampane
+    # ✅ 6. Vytvoreni a spusteni kampane
     print("\n" + "=" * 60)
     print("SPOUSTIM KAMPAN...")
     print("=" * 60)
     
     try:
+        # ✅ POUŽIJ ColdCallerService s názvem kampaně
         caller = ColdCallerService(
-            campaign_name=campaign_name,
-            product_name=selected_product
+            campaign_name=selected_campaign['name']
         )
         
         caller.run_campaign(
@@ -131,17 +132,22 @@ def main():
         traceback.print_exc()
         sys.exit(1)
     
-    # 8. Vysledky
+    # ✅ 7. Vysledky
     print("\n" + "=" * 60)
     print("KAMPAN DOKONCENA!")
     print("=" * 60)
     
-    # Statistiky
-    stats = db.get_stats()
-    print(f"\nCelkove statistiky:")
-    print(f"  Prichozi hovory: {stats.get('inbound', 0)}")
-    print(f"  Odchozi hovory: {stats.get('outbound', 0)}")
-    print(f"  Celkem: {sum(stats.values())}")
+    # Statistiky z cold_calling_db
+    stats = db.get_campaign_stats(selected_campaign['id'])
+    print(f"\nStatistiky kampane:")
+    print(f"  Celkem kontaktu: {stats['total_contacts']}")
+    print(f"  Zavolano: {stats['called']}")
+    print(f"  Uspesnych: {stats['success']}")
+    print(f"  Neuspesnych: {stats['failed']}")
+    print(f"  Uspesnost: {stats['success_rate']}%")
+    
+    print(f"\n💡 Sleduj vysledky:")
+    print(f"   http://localhost:5000/admin/campaign/{selected_campaign['id']}")
 
 
 if __name__ == "__main__":
