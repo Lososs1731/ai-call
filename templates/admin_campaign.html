@@ -4,146 +4,208 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kampaň {{ campaign_id }} - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f5;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #1a1d2e 0%, #16213e 100%);
+            color: #e8eaf6;
+            min-height: 100vh;
+        }
+        
+        /* Navbar */
         .navbar {
-            background: white;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             padding: 1rem 2rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-        
-        .navbar .logo {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #667eea;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         
         .navbar a {
             color: #667eea;
             text-decoration: none;
-            margin-right: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
-        .navbar .logout-btn {
-            background: #e74c3c;
-            color: white;
+        .navbar a:hover {
+            color: #764ba2;
+            transform: translateX(-3px);
+        }
+        
+        .logo {
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-info span {
             padding: 0.5rem 1rem;
-            border-radius: 6px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 50px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
         }
         
+        .logout-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 0.6rem 1.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.3);
+        }
+        
+        .logout-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Container */
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 2rem auto;
             padding: 0 2rem;
         }
         
+        /* Header */
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 12px;
+            padding: 2.5rem;
+            border-radius: 20px;
             margin-bottom: 2rem;
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
         }
         
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        .header p {
+            opacity: 0.9;
+        }
+        
+        /* Stats Grid */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
             margin-bottom: 2rem;
         }
         
         .stat-card {
-            background: white;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
             padding: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(102, 126, 234, 0.3);
         }
         
         .stat-card h3 {
-            font-size: 2rem;
-            color: #667eea;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             margin-bottom: 0.5rem;
         }
         
         .stat-card p {
-            color: #666;
+            color: #b0b3c7;
             font-size: 0.9rem;
         }
         
-        .section {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        /* Glass Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
             margin-bottom: 2rem;
         }
         
-        .section h2 {
-            margin-bottom: 1rem;
-            color: #333;
+        .glass-card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        /* Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
         }
         
         .btn {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 0.75rem 1.5rem;
-            border-radius: 6px;
+            border-radius: 12px;
             text-decoration: none;
-            display: inline-block;
-            margin-right: 0.5rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
         
         .btn:hover {
-            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
         
         .btn-success {
-            background: #28a745;
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
         }
         
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.3);
         }
         
-        th, td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid #eee;
+        /* Form */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
         }
-        
-        th {
-            background: #f8f9fa;
-            font-weight: 600;
-        }
-        
-        tr:hover {
-            background: #f8f9fa;
-            cursor: pointer;
-        }
-        
-        .badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        
-        .badge-pending { background: #fff3cd; color: #856404; }
-        .badge-calling { background: #cce5ff; color: #004085; }
-        .badge-success { background: #d4edda; color: #155724; }
-        .badge-failed { background: #f8d7da; color: #721c24; }
         
         .form-group {
             margin-bottom: 1rem;
@@ -152,18 +214,134 @@
         .form-group input {
             width: 100%;
             padding: 0.75rem;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #e8eaf6;
+            font-size: 0.95rem;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-group input::placeholder {
+            color: rgba(176, 179, 199, 0.5);
+        }
+        
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        th {
+            background: rgba(102, 126, 234, 0.1);
+            font-weight: 600;
+            color: #667eea;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        tr {
+            transition: all 0.2s ease;
+        }
+        
+        tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 0.4rem 0.9rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-pending {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        .badge-calling {
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196f3;
+            border: 1px solid rgba(33, 150, 243, 0.3);
+        }
+        
+        .badge-success {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+        
+        .badge-failed {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+        
+        /* Instructions */
+        .instructions {
+            background: rgba(102, 126, 234, 0.05);
+            border-left: 4px solid #667eea;
+            padding: 1.5rem;
+            border-radius: 12px;
+        }
+        
+        .instructions h2 {
+            margin-bottom: 1rem;
+        }
+        
+        .instructions ol {
+            margin-left: 1.5rem;
+            line-height: 1.8;
+            color: #b0b3c7;
+        }
+        
+        .instructions code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            color: #667eea;
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #b0b3c7;
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
         }
     </style>
 </head>
 <body>
     <div class="navbar">
-        <div>
+        <div style="display: flex; align-items: center; gap: 2rem;">
             <a href="/admin">← Zpět na dashboard</a>
             <span class="logo">📊 Kampaň #{{ campaign_id }}</span>
         </div>
-        <div>
+        <div class="user-info">
             <span>👤 {{ user.username }}</span>
             <a href="/logout" class="logout-btn">Odhlásit</a>
         </div>
@@ -171,7 +349,7 @@
     
     <div class="container">
         <div class="header">
-            <h1>{{ stats.get('campaign_name', 'Kampaň') }}</h1>
+            <h1>{{ stats.get('campaign_name', 'Moravské weby') }}</h1>
             <p>ID: {{ campaign_id }}</p>
         </div>
         
@@ -200,33 +378,37 @@
         </div>
         
         <!-- Akce -->
-        <div style="margin-bottom: 2rem;">
+        <div class="action-buttons">
             <a href="/admin/import/{{ campaign_id }}" class="btn">📥 Importovat CSV</a>
             <a href="/admin/export/{{ campaign_id }}" class="btn">📤 Export CSV</a>
+            <a href="/admin/reset/{{ campaign_id }}" class="btn btn-danger" 
+               onclick="return confirm('Opravdu resetovat všechny kontakty?')">
+                🔄 Reset kontaktů
+            </a>
         </div>
         
-        <!-- Přidat kontakt ručně -->
-        <div class="section">
+        <!-- Přidat kontakt -->
+        <div class="glass-card">
             <h2>➕ Přidat kontakt</h2>
-            <form action="/admin/add-contact" method="POST" style="display: grid; gap: 1rem;">
+            <form action="/admin/add-contact" method="POST">
                 <input type="hidden" name="campaign_id" value="{{ campaign_id }}">
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-grid">
                     <input type="text" name="name" placeholder="Jméno *" required>
                     <input type="tel" name="phone" placeholder="+420..." required>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-grid">
                     <input type="text" name="company" placeholder="Firma">
                     <input type="email" name="email" placeholder="Email">
                 </div>
                 
-                <button type="submit" class="btn btn-success">➕ Přidat</button>
+                <button type="submit" class="btn btn-success">➕ Přidat kontakt</button>
             </form>
         </div>
         
         <!-- Seznam kontaktů -->
-        <div class="section">
+        <div class="glass-card">
             <h2>📋 Kontakty ({{ contacts|length }})</h2>
             
             {% if contacts %}
@@ -257,68 +439,69 @@
                 </tbody>
             </table>
             {% else %}
-            <p>Zatím žádné kontakty.</p>
-            <p>💡 Importuj CSV nebo přidej ručně výše.</p>
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <p>Zatím žádné kontakty. Importuj CSV nebo přidej ručně výše.</p>
+            </div>
             {% endif %}
         </div>
         
+        <!-- Seznam hovorů -->
+        {% if calls %}
+        <div class="glass-card">
+            <h2>📞 Hovory ({{ calls|length }})</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Telefon</th>
+                        <th>Délka</th>
+                        <th>Výsledek</th>
+                        <th>Skóre</th>
+                        <th>AI Shrnutí</th>
+                        <th>Datum</th>
+                        <th>Akce</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for call in calls %}
+                    <tr>
+                        <td>{{ call.phone }}</td>
+                        <td>{{ call.duration }}s</td>
+                        <td>
+                            {% if call.outcome == 'meeting_scheduled' %}
+                            <span class="badge badge-success">✅ Schůzka</span>
+                            {% elif call.outcome == 'rejected' or call.outcome == 'no_interest' %}
+                            <span class="badge badge-failed">❌ Odmítnuto</span>
+                            {% else %}
+                            <span class="badge badge-pending">{{ call.outcome or 'N/A' }}</span>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ call.sales_score or 0 }}/100</strong></td>
+                        <td>{{ (call.ai_summary or 'N/A')[:50] }}...</td>
+                        <td>{{ call.created_at }}</td>
+                        <td>
+                            <a href="/admin/call-detail/{{ call.id }}" class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                                📄 Detail
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        
         <!-- Návod -->
-        <div class="section">
+        <div class="glass-card instructions">
             <h2>🚀 Jak spustit kampaň</h2>
             <ol>
                 <li>Importuj kontakty (CSV nebo ručně)</li>
                 <li>Spusť: <code>python -m cli.run_campaign</code></li>
                 <li>Vyber tuto kampaň (ID: {{ campaign_id }})</li>
-                <li>Sleduj výsledky zde</li>
+                <li>Sleduj výsledky zde v reálném čase</li>
             </ol>
         </div>
-        <!-- Přidej za sekci "Kontakty" -->
-
-<!-- Seznam hovorů -->
-<div class="section">
-    <h2>📞 Hovory ({{ calls|length }})</h2>
-    
-    {% if calls %}
-    <table>
-        <thead>
-            <tr>
-                <th>Telefon</th>
-                <th>Délka</th>
-                <th>Výsledek</th>
-                <th>Skóre</th>
-                <th>AI Shrnutí</th>
-                <th>Datum</th>
-                <th>Detail</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for call in calls %}
-            <tr>
-                <td>{{ call.phone }}</td>
-                <td>{{ call.duration }}s</td>
-                <td>
-                    {% if call.outcome == 'meeting_scheduled' %}
-                    <span class="badge badge-success">✅ Schůzka</span>
-                    {% elif call.outcome == 'rejected' or call.outcome == 'no_interest' %}
-                    <span class="badge badge-failed">❌ Odmítnuto</span>
-                    {% else %}
-                    <span class="badge badge-pending">{{ call.outcome or 'N/A' }}</span>
-                    {% endif %}
-                </td>
-                <td><strong>{{ call.sales_score or 0 }}/100</strong></td>
-                <td>{{ (call.ai_summary or 'N/A')[:60] }}...</td>
-                <td>{{ call.created_at }}</td>
-                <td>
-                    <a href="/admin/call-detail/{{ call.id }}" class="btn">📄 Detail</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p>Zatím žádné hovory.</p>
-    {% endif %}
-</div>
     </div>
 </body>
 </html>

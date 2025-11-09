@@ -1,25 +1,243 @@
-<!-- templates/admin_call_detail.html -->
 <!DOCTYPE html>
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <title>Detail hovoru</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail hovoru - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Stejný CSS jako admin_campaign.html */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, sans-serif; background: #f5f5f5; }
-        .navbar { background: white; padding: 1rem 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .container { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; }
-        .section { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
-        .message { padding: 1rem; margin-bottom: 1rem; border-radius: 8px; }
-        .message-assistant { background: #e3f2fd; }
-        .message-user { background: #f1f8e9; }
-        .message strong { display: block; margin-bottom: 0.5rem; color: #333; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #1a1d2e 0%, #16213e 100%);
+            color: #e8eaf6;
+            min-height: 100vh;
+        }
         
-        .score-high { color: #28a745; font-size: 2rem; font-weight: bold; }
-        .score-medium { color: #ffc107; font-size: 2rem; font-weight: bold; }
-        .score-low { color: #dc3545; font-size: 2rem; font-weight: bold; }
+        /* Navbar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .navbar a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .navbar a:hover {
+            color: #764ba2;
+            transform: translateX(-3px);
+        }
+        
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        /* Glass Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .glass-card h1, .glass-card h2 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .info-item {
+            padding: 1rem;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+        
+        .info-item strong {
+            display: block;
+            color: #667eea;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .info-item span {
+            font-size: 1.1rem;
+            color: #e8eaf6;
+        }
+        
+        /* Score Display */
+        .score-display {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 16px;
+            margin: 2rem 0;
+        }
+        
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 1rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: 700;
+            position: relative;
+        }
+        
+        .score-high {
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            color: white;
+            box-shadow: 0 10px 40px rgba(76, 175, 80, 0.4);
+        }
+        
+        .score-medium {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            color: white;
+            box-shadow: 0 10px 40px rgba(255, 152, 0, 0.4);
+        }
+        
+        .score-low {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+            box-shadow: 0 10px 40px rgba(244, 67, 54, 0.4);
+        }
+        
+        .score-label {
+            color: #b0b3c7;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        
+        /* Messages */
+        .conversation {
+            margin-top: 2rem;
+        }
+        
+        .message {
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 16px;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message-assistant {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-left: 4px solid #667eea;
+        }
+        
+        .message-user {
+            background: rgba(76, 175, 80, 0.1);
+            border-left: 4px solid #4caf50;
+        }
+        
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .message-assistant .message-header {
+            color: #667eea;
+        }
+        
+        .message-user .message-header {
+            color: #4caf50;
+        }
+        
+        .message-content {
+            color: #e8eaf6;
+            line-height: 1.6;
+        }
+        
+        /* Outcome Badge */
+        .outcome-badge {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 1rem 0;
+        }
+        
+        .outcome-success {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+            border: 2px solid rgba(76, 175, 80, 0.3);
+        }
+        
+        .outcome-failed {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            border: 2px solid rgba(244, 67, 54, 0.3);
+        }
+        
+        .outcome-pending {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border: 2px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        /* Summary */
+        .summary-box {
+            background: rgba(102, 126, 234, 0.05);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            margin: 1.5rem 0;
+        }
+        
+        .summary-box p {
+            line-height: 1.8;
+            color: #b0b3c7;
+        }
     </style>
 </head>
 <body>
@@ -28,40 +246,88 @@
     </div>
     
     <div class="container">
-        <div class="section">
+        <!-- Základní info -->
+        <div class="glass-card">
             <h1>📞 Detail hovoru</h1>
-            <p><strong>Telefon:</strong> {{ call.phone }}</p>
-            <p><strong>Délka:</strong> {{ call.duration }}s</p>
-            <p><strong>Status:</strong> {{ call.status }}</p>
-            <p><strong>Datum:</strong> {{ call.created_at }}</p>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <strong>Telefon</strong>
+                    <span>{{ call.phone }}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Délka</strong>
+                    <span>{{ call.duration }}s</span>
+                </div>
+                <div class="info-item">
+                    <strong>Status</strong>
+                    <span>{{ call.status }}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Datum</strong>
+                    <span>{{ call.created_at }}</span>
+                </div>
+            </div>
         </div>
         
-        <div class="section">
+        <!-- AI Hodnocení -->
+        <div class="glass-card">
             <h2>📊 AI Hodnocení</h2>
-            <p><strong>Výsledek:</strong> {{ call.outcome or 'N/A' }}</p>
-            <p><strong>Skóre:</strong> 
-                <span class="{% if call.sales_score >= 70 %}score-high{% elif call.sales_score >= 40 %}score-medium{% else %}score-low{% endif %}">
-                    {{ call.sales_score or 0 }}/100
-                </span>
-            </p>
-            <p><strong>AI Shrnutí:</strong></p>
-            <p>{{ call.ai_summary or 'Není dostupné' }}</p>
+            
+            <div style="text-align: center;">
+                {% if call.outcome == 'meeting_scheduled' %}
+                <span class="outcome-badge outcome-success">✅ Schůzka domluvena</span>
+                {% elif call.outcome == 'rejected' or call.outcome == 'no_interest' %}
+                <span class="outcome-badge outcome-failed">❌ Odmítnuto</span>
+                {% else %}
+                <span class="outcome-badge outcome-pending">{{ call.outcome or 'Neuvedeno' }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="score-display">
+                <div class="score-circle {% if call.sales_score >= 70 %}score-high{% elif call.sales_score >= 40 %}score-medium{% else %}score-low{% endif %}">
+                    {{ call.sales_score or 0 }}
+                </div>
+                <div class="score-label">Úspěšnost z 100 bodů</div>
+            </div>
+            
+            {% if call.ai_summary %}
+            <div class="summary-box">
+                <strong style="color: #667eea; display: block; margin-bottom: 0.75rem;">AI Shrnutí:</strong>
+                <p>{{ call.ai_summary }}</p>
+            </div>
+            {% endif %}
         </div>
         
-        <div class="section">
+        <!-- Transkript -->
+        <div class="glass-card">
             <h2>💬 Transkript konverzace</h2>
-            {% if conversation %}
-                {% for msg in conversation %}
-                    {% if msg.role != 'system' %}
-                    <div class="message message-{{ msg.role }}">
-                        <strong>{% if msg.role == 'assistant' %}🤖 AI (Pavel):{% else %}👤 {{ call.phone }}:{% endif %}</strong>
-                        {{ msg.content }}
+            
+            <div class="conversation">
+                {% if conversation %}
+                    {% for msg in conversation %}
+                        {% if msg.role != 'system' %}
+                        <div class="message message-{{ msg.role }}">
+                            <div class="message-header">
+                                {% if msg.role == 'assistant' %}
+                                🤖 AI Asistent (Pavel)
+                                {% else %}
+                                👤 Zákazník ({{ call.phone }})
+                                {% endif %}
+                            </div>
+                            <div class="message-content">
+                                {{ msg.content }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; padding: 3rem; color: #b0b3c7;">
+                        <div style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;">💬</div>
+                        <p>Transkript není dostupný</p>
                     </div>
-                    {% endif %}
-                {% endfor %}
-            {% else %}
-                <p>Transkript není dostupný.</p>
-            {% endif %}
+                {% endif %}
+            </div>
         </div>
     </div>
 </body>
